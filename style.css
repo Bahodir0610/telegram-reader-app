@@ -1,3 +1,45 @@
+/* === Add these styles to your existing style.css === */
+
+/* Style for clickable words */
+.translatable-word {
+    cursor: pointer;
+    /* Optional: Add a subtle indicator */
+    /* border-bottom: 1px dotted var(--tg-theme-hint-color, #aaaaaa); */
+    /* transition: background-color 0.2s ease; */ /* Optional hover effect */
+}
+
+/* Optional hover effect */
+/* .translatable-word:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+} */
+
+/* Translation Popup */
+#translation-popup {
+    position: absolute; /* Crucial for positioning near the word */
+    display: none; /* Hidden by default */
+    background-color: var(--tg-theme-secondary-bg-color, #333333); /* Darker background */
+    color: var(--tg-theme-button-text-color, #ffffff); /* Light text */
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 1.1em; /* Slightly smaller than main text, but readable */
+    line-height: 1.4;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 100; /* Ensure it's on top */
+    max-width: 80vw; /* Prevent it from being too wide */
+    text-align: center;
+    pointer-events: none; /* Prevent the popup itself from being clicked */
+    white-space: nowrap; /* Keep translation on one line if possible */
+    opacity: 0; /* Start invisible for transition */
+    transition: opacity 0.15s ease-in-out; /* Fade effect */
+}
+
+#translation-popup.visible {
+    display: block;
+    opacity: 1;
+}
+
+/* === Existing styles below === */
+
 /* Basic Reset & Defaults */
 * {
     box-sizing: border-box;
@@ -38,19 +80,13 @@ h1 {
 }
 
 /* Paragraph Styling - Key for Readability */
-.content p {
+.content p:not(.drawing-placeholder) { /* Apply only to text paragraphs */
     font-size: 1.4em; /* Significantly Enlarged Text */
     margin-bottom: 1.5em; /* Good spacing between paragraphs */
     text-align: justify; /* Justified text looks book-like, but left-align is also good */
     hyphens: auto; /* Allow hyphenation for better justified text */
     -webkit-hyphens: auto;
     -ms-hyphens: auto;
-
-    /* Prevent selection if you want pure reading */
-    /* user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none; */
 }
 
 /* Placeholder for Drawings */
@@ -84,10 +120,13 @@ body {
 
 /* Media query for slightly smaller text on very small screens if needed */
 @media (max-width: 360px) {
-    .content p {
+    .content p:not(.drawing-placeholder) {
         font-size: 1.3em;
     }
     h1 {
         font-size: 1.6em;
+    }
+    #translation-popup {
+        font-size: 1.0em;
     }
 }
