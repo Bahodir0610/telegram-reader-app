@@ -1,0 +1,93 @@
+/* Basic Reset & Defaults */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* Use Telegram Theme Variables with fallbacks */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    line-height: 1.7; /* Increased line spacing for readability */
+    background-color: var(--tg-theme-bg-color, #ffffff); /* Telegram background */
+    color: var(--tg-theme-text-color, #000000); /* Telegram text color */
+    -webkit-font-smoothing: antialiased; /* Smoother fonts on WebKit */
+    -moz-osx-font-smoothing: grayscale; /* Smoother fonts on Firefox */
+    overscroll-behavior-y: none; /* Prevent pull-to-refresh */
+}
+
+/* Container for content */
+.container {
+    max-width: 900px; /* Max width for very large screens, not essential in Mini App */
+    margin: 0 auto; /* Center container */
+    padding: 25px 20px; /* Generous padding */
+}
+
+/* Chapter Title */
+h1 {
+    font-size: 1.8em; /* Larger title */
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 30px; /* Space below title */
+    color: var(--tg-theme-text-color, #333); /* Slightly different color if needed */
+}
+
+/* Main Content Area */
+.content {
+    /* No specific styles needed here unless adding borders etc. */
+}
+
+/* Paragraph Styling - Key for Readability */
+.content p {
+    font-size: 1.4em; /* Significantly Enlarged Text */
+    margin-bottom: 1.5em; /* Good spacing between paragraphs */
+    text-align: justify; /* Justified text looks book-like, but left-align is also good */
+    hyphens: auto; /* Allow hyphenation for better justified text */
+    -webkit-hyphens: auto;
+    -ms-hyphens: auto;
+
+    /* Prevent selection if you want pure reading */
+    /* user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none; */
+}
+
+/* Placeholder for Drawings */
+.drawing-placeholder {
+    font-style: italic;
+    color: var(--tg-theme-hint-color, #888888); /* Use hint color from theme */
+    text-align: center;
+    font-size: 1.1em; /* Slightly smaller than main text */
+    margin-top: 1em;
+    margin-bottom: 2em; /* More space around drawings */
+}
+
+/* Ensure links (if any added later) use Telegram theme color */
+a {
+    color: var(--tg-theme-link-color, #007aff);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Hide scrollbar (optional, Telegram usually handles the frame) */
+body::-webkit-scrollbar {
+    display: none; /* For Chrome, Safari, and Opera */
+}
+body {
+    -ms-overflow-style: none; /* For Internet Explorer and Edge */
+    scrollbar-width: none; /* For Firefox */
+}
+
+/* Media query for slightly smaller text on very small screens if needed */
+@media (max-width: 360px) {
+    .content p {
+        font-size: 1.3em;
+    }
+    h1 {
+        font-size: 1.6em;
+    }
+}
