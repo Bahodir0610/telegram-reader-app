@@ -7,6 +7,39 @@
     /* border-bottom: 1px dotted var(--tg-theme-hint-color, #aaaaaa); */
 }
 
+
+/* === Add these styles IN ADDITION to existing styles === */
+/* === You can place them before or after the popup styles === */
+
+/* Style for the currently selected/highlighted word */
+.highlighted-word {
+    background-color: var(--tg-theme-button-color, #007aff); /* Use button color */
+    color: var(--tg-theme-button-text-color, #ffffff); /* Use button text color */
+    border-radius: 3px;
+    padding: 0 3px; /* Small padding */
+    /* Prevent changing line height */
+    display: inline;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    transition: background-color 0.1s ease-in-out, color 0.1s ease-in-out;
+}
+
+/* Style for the highlighted sentence (applied to the <p> tag) */
+.highlighted-sentence {
+    /* Use a subtle background, maybe based on hint or secondary background */
+    background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+    /* Slightly darker secondary bg if theme provides it */
+    /* background-color: color-mix(in srgb, var(--tg-theme-secondary-bg-color, #f0f0f0) 80%, black); */
+    border-radius: 5px;
+    padding: 0.3em 0.5em; /* Add some padding around the paragraph */
+    margin-left: -0.5em; /* Offset padding visually */
+    margin-right: -0.5em; /* Offset padding visually */
+    box-shadow: 0 0 0 1px var(--tg-theme-hint-color, #cccccc) inset; /* Subtle inset border */
+    transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+/* === Make sure all your other styles from previous steps are still present === */
+
 /* Translation Popup */
 #translation-popup {
     position: absolute; /* Crucial for positioning near the word */

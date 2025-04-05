@@ -1,8 +1,7 @@
-// translator.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Comprehensive Translation Dictionary (English to Uzbek) ---
-    // Based on Chapter 1 text provided. Keys are lowercase, punctuation removed.
+    // --- Translation Dictionary (English to Uzbek) ---
+    // Keep the comprehensive dictionary from the previous step here
     const translations = {
         // --- Words ---
         "a": "", // Often omitted or part of phrase
@@ -372,100 +371,139 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Add any other words or specific phrases identified during testing
     };
-
     // --- Elements ---
     const contentArea = document.getElementById('chapter-content');
     const popup = document.getElementById('translation-popup');
-    let activeWordSpan = null; // Keep track of the currently active word span
+
+    // --- State ---
+    let activeWordSpan = null; // Keep track of the currently highlighted word span
+    let highlightedParagraph = null; // Keep track of the highlighted paragraph element
 
     // --- Functions ---
 
-    // Function to clean word (lowercase, remove trailing punctuation)
+    // Function to clean word (lowercase, remove surrounding punctuation)
     function cleanWord(word) {
         if (!word) return '';
-        // Remove common trailing punctuation and convert to lowercase
-        // Updated regex to handle more punctuation cases including quotes
         return word.replace(/^[.,!?;:"“”’]+|[.,!?;:"“”’]+$/g, '').toLowerCase();
     }
 
-
-    // Function to wrap words in spans
-    function wrapWordsInSpans() {
+     // Function to wrap words in spans (No changes needed from previous version)
+     function wrapWordsInSpans() {
         const paragraphs = contentArea.querySelectorAll('p:not(.drawing-placeholder)');
-
         paragraphs.forEach(p => {
             const childNodes = Array.from(p.childNodes);
             const newNodes = [];
-
             childNodes.forEach(node => {
                 if (node.nodeType === Node.TEXT_NODE) {
                     const text = node.textContent;
-                    const parts = text.split(/(\s+)/); // Split by space, keep spaces
-
+                    const parts = text.split(/(\s+)/);
                     parts.forEach(part => {
-                        if (part.trim().length > 0 && /\S/.test(part)) { // It's a word/token
-                             // Check if the part itself contains internal punctuation like hyphen (e.g., grown-ups)
-                             // For simplicity here, we treat hyphenated words as single units.
-                             // More complex splitting (e.g., on sentence-ending punctuation within a token) is avoided.
+                        if (part.trim().length > 0 && /\S/.test(part)) {
                              const span = document.createElement('span');
                              span.className = 'translatable-word';
-                             span.textContent = part; // Display original form with punctuation
-                             span.dataset.key = cleanWord(part); // Store cleaned key for lookup
+                             span.textContent = part;
+                             span.dataset.key = cleanWord(part);
                              newNodes.push(span);
-                        } else if (part.length > 0) { // It's whitespace
+                        } else if (part.length > 0) {
                             newNodes.push(document.createTextNode(part));
                         }
                     });
                 } else {
-                    // Keep other node types (like placeholders, maybe <em> etc. if added later)
                     newNodes.push(node.cloneNode(true));
                 }
             });
-
-            // Replace paragraph content
             p.innerHTML = '';
             newNodes.forEach(newNode => p.appendChild(newNode));
         });
     }
 
 
-    // Function to show the popup
-    function showPopup(spanElement, translation) {
-        hidePopup(); // Hide any previous popup
-
+    // Function to show the popup (Modified to handle potential sentence mode)
+    function showPopup(targetElement, translation, isSentence = false) {
         popup.textContent = translation;
-        popup.classList.add('visible'); // Make it visible via CSS transition
+        popup.classList.add('visible');
 
-        const wordRect = spanElement.getBoundingClientRect();
-        const popupWidth = popup.offsetWidth; // Get width after content is set
-        const popupHeight = popup.offsetHeight; // Get height after content is set
+        // Position relative to the word span OR the paragraph
+        const targetRect = targetElement.getBoundingClientRect();
+        const popupWidth = popup.offsetWidth;
+        const popupHeight = popup.offsetHeight;
 
-        // Position below by default
-        let top = wordRect.bottom + window.scrollY + 5;
-        let left = wordRect.left + window.scrollX + (wordRect.width / 2) - (popupWidth / 2);
+        let top, left;
 
-        // Adjust if popup goes off bottom edge
-        if (top + popupHeight > window.innerHeight + window.scrollY - 10) {
-            top = wordRect.top + window.scrollY - popupHeight - 5; // Position above
+        if (isSentence) {
+            // Position near the top-center of the paragraph
+            top = targetRect.top + window.scrollY - popupHeight - 10; // Above paragraph
+            left = targetRect.left + window.scrollX + (targetRect.width / 2) - (popupWidth / 2);
+             // If too high, position below paragraph start
+             if (top < window.scrollY + 10) {
+                  top = targetRect.top + window.scrollY + 15; // Below paragraph start
+             }
+
+        } else {
+            // Position relative to the word span (existing logic)
+            top = targetRect.bottom + window.scrollY + 5; // Below word
+            left = targetRect.left + window.scrollX + (targetRect.width / 2) - (popupWidth / 2);
+            if (top + popupHeight > window.innerHeight + window.scrollY - 10) {
+                top = targetRect.top + window.scrollY - popupHeight - 5; // Above word
+            }
         }
 
-        // Adjust if popup goes off left/right edges
-        left = Math.max(10, left); // Ensure min 10px from left edge
-        left = Math.min(left, window.innerWidth + window.scrollX - popupWidth - 10); // Ensure min 10px from right edge
+        // Adjust horizontal position to stay on screen
+        left = Math.max(10, left);
+        left = Math.min(left, window.innerWidth + window.scrollX - popupWidth - 10);
 
         popup.style.top = `${top}px`;
         popup.style.left = `${left}px`;
-
-        activeWordSpan = spanElement;
     }
 
     // Function to hide the popup
     function hidePopup() {
         popup.classList.remove('visible');
-        // Optional: Move off-screen immediately to prevent brief visibility during fade-out animation
+        // Optional: Move off-screen
         // popup.style.top = '-9999px';
         // popup.style.left = '-9999px';
-        activeWordSpan = null;
+    }
+
+    // Function to remove ALL highlights (word and sentence)
+    function removeHighlights() {
+        if (activeWordSpan) {
+            activeWordSpan.classList.remove('highlighted-word');
+            activeWordSpan = null;
+        }
+        if (highlightedParagraph) {
+            highlightedParagraph.classList.remove('highlighted-sentence');
+            highlightedParagraph = null;
+        }
+        hidePopup();
+    }
+
+    // Function to get word-by-word sentence translation (BASIC)
+    function getSentenceTranslation(paragraphElement) {
+        if (!paragraphElement) return "[Translation error]";
+
+        const wordSpans = paragraphElement.querySelectorAll('.translatable-word');
+        const translatedWords = [];
+
+        wordSpans.forEach(span => {
+            const key = span.dataset.key;
+            // Basic phrase check (could be more robust)
+            let translation = translations[key];
+            const nextEl = span.nextElementSibling;
+            if(nextEl && nextEl.classList.contains('translatable-word')) {
+                const phraseKey = `${key} ${cleanWord(nextEl.textContent)}`;
+                if(translations[phraseKey]) {
+                    // If phrase found, use it and potentially skip next word's lookup
+                    // For simplicity, we'll just use the word translation here
+                    // More complex logic needed to handle phrase output correctly in sequence
+                }
+            }
+
+            // Fallback to original word if no translation
+            translatedWords.push(translation && translation !== "" ? translation : span.textContent);
+        });
+
+        // IMPORTANT: This simple join doesn't respect Uzbek grammar rules!
+        return translatedWords.join(' ');
     }
 
 
@@ -476,93 +514,90 @@ document.addEventListener('DOMContentLoaded', () => {
         const target = event.target;
 
         if (target.classList.contains('translatable-word')) {
-             // If user is selecting text, don't trigger popup
-             if (window.getSelection().toString()) {
-                 hidePopup(); // Hide popup if selection is happening
-                 return;
-             }
-
-            // If clicking the same word again, hide the popup
-            if (target === activeWordSpan) {
-                hidePopup();
+            // Prevent interfering with text selection
+            if (window.getSelection().toString()) {
+                removeHighlights(); // Remove highlights if selecting text
                 return;
             }
 
-            const key = target.dataset.key;
-            let translation = translations[key]; // Direct word lookup first
+            const parentP = target.closest('p'); // Find the parent paragraph
 
-            // Simple Phrase Handling: Check for predefined phrases involving this word
-            // This is basic; more robust NLP would be needed for complex cases.
-             if (!translation || translation === "") {
-                 const textContent = target.textContent; // Original text from span
-                 const prevEl = target.previousElementSibling;
-                 const nextEl = target.nextElementSibling;
-                 const prevPrevEl = prevEl ? prevEl.previousElementSibling : null;
-                 const nextNextEl = nextEl ? nextEl.nextElementSibling : null;
+            // --- Check if clicking the ALREADY highlighted word ---
+            if (target === activeWordSpan) {
+                // SECOND TAP: Show sentence translation
+                removeHighlights(); // Clear previous word highlight first
 
-                 // Check common patterns (add more as needed)
-                 let phraseKey = "";
-                 // Two-word phrases (current + next)
-                 if (nextEl) {
-                     phraseKey = `${key} ${cleanWord(nextEl.textContent)}`;
-                     if (translations[phraseKey]) translation = translations[phraseKey];
-                 }
-                 // Two-word phrases (prev + current)
-                 if (!translation && prevEl) {
-                      phraseKey = `${cleanWord(prevEl.textContent)} ${key}`;
-                     if (translations[phraseKey]) translation = translations[phraseKey];
-                 }
-                 // Three-word phrases (current + next + nextNext) - e.g., "act of swallowing"
-                 if (!translation && nextEl && nextNextEl) {
-                      phraseKey = `${key} ${cleanWord(nextEl.textContent)} ${cleanWord(nextNextEl.textContent)}`;
-                      if (translations[phraseKey]) translation = translations[phraseKey];
-                 }
-                  // Three-word phrases (prev + current + next)
-                  if (!translation && prevEl && nextEl) {
-                       phraseKey = `${cleanWord(prevEl.textContent)} ${key} ${cleanWord(nextEl.textContent)}`;
-                       if (translations[phraseKey]) translation = translations[phraseKey];
-                  }
-                   // Three-word phrases (prevPrev + prev + current)
-                   if (!translation && prevPrevEl && prevEl) {
-                        phraseKey = `${cleanWord(prevPrevEl.textContent)} ${cleanWord(prevEl.textContent)} ${key}`;
-                        if (translations[phraseKey]) translation = translations[phraseKey];
-                   }
+                if (parentP) {
+                    const sentenceTrans = getSentenceTranslation(parentP);
+                    console.warn("Sentence translation is basic word-by-word and may be inaccurate.");
 
-                 // Specific overrides for very common function words if they are part of a known phrase from dictionary
-                  if ((key === 'a' || key === 'an' || key === 'the') && translation === "") {
-                       // Check combinations like 'at a glance' explicitly defined
-                       if (prevEl && translations[`${cleanWord(prevEl.textContent)} ${key}`]) {
-                           translation = translations[`${cleanWord(prevEl.textContent)} ${key}`];
-                       } else if (nextEl && translations[`${key} ${cleanWord(nextEl.textContent)}`]) {
-                           translation = translations[`${key} ${cleanWord(nextEl.textContent)}`];
-                       }
-                       // Add more specific phrase checks if needed
-                  }
-            }
+                    parentP.classList.add('highlighted-sentence');
+                    highlightedParagraph = parentP; // Track highlighted paragraph
+                    showPopup(parentP, sentenceTrans, true); // Show popup relative to paragraph
+                    activeWordSpan = null; // No word is 'active' in sentence mode
+                } else {
+                    hidePopup(); // Should not happen if target is valid word span
+                }
 
-
-            if (translation && translation !== "") {
-                showPopup(target, translation);
-                event.stopPropagation(); // Prevent body click listener from firing immediately
             } else {
-                hidePopup(); // No translation found, ensure popup is hidden
-                console.log(`No translation for key: "${key}" (from word: "${target.textContent}")`);
+                // --- FIRST TAP on a NEW word ---
+                removeHighlights(); // Clear any previous highlights (word or sentence)
+
+                const key = target.dataset.key;
+                let wordTranslation = translations[key]; // Direct lookup
+
+                 // Simple phrase check (as before) - refine if needed
+                 if (!wordTranslation || wordTranslation === "") {
+                     const nextEl = target.nextElementSibling;
+                     const prevEl = target.previousElementSibling;
+                     let phraseKey = "";
+                     if (nextEl && nextEl.classList.contains('translatable-word')) {
+                          phraseKey = `${key} ${cleanWord(nextEl.textContent)}`;
+                          if (translations[phraseKey]) wordTranslation = translations[phraseKey];
+                     }
+                     if (!wordTranslation && prevEl && prevEl.classList.contains('translatable-word')) {
+                         phraseKey = `${cleanWord(prevEl.textContent)} ${key}`;
+                         if (translations[phraseKey]) wordTranslation = translations[phraseKey];
+                     }
+                     // Add more phrase checks if necessary
+                 }
+
+
+                if (wordTranslation && wordTranslation !== "") {
+                    target.classList.add('highlighted-word');
+                    activeWordSpan = target; // Track new active word
+                    highlightedParagraph = null; // Ensure no sentence highlight
+                    showPopup(target, wordTranslation, false); // Show popup relative to word
+                } else {
+                    // No translation found for this word/phrase
+                    hidePopup();
+                    console.log(`No translation for key: "${key}" (from word: "${target.textContent}")`);
+                }
             }
+
+            event.stopPropagation(); // Prevent body listener closing popup immediately
+
         }
-        // If clicking *not* on a word span *within* the content area (e.g., whitespace between words)
-        // else if (contentArea.contains(target)) {
-        //     hidePopup();
-        // }
+        // Note: Clicking whitespace within the content area will now fall through
+        // to the body listener, which calls removeHighlights()
     });
 
-    // Hide popup if clicking anywhere outside of a word span
-    // Use 'mousedown' instead of 'click' to potentially hide faster before selection might start
+    // Hide popup and highlights if clicking anywhere else
     document.body.addEventListener('mousedown', (event) => {
-        // Check if the click target is NOT a translatable word OR the popup itself
-        if (!event.target.classList.contains('translatable-word') && event.target.id !== 'translation-popup') {
-             hidePopup();
+        // Check if the click was outside the content area,
+        // or directly on the container/h1, or on a non-word element (like <p> itself or image placeholder)
+        if (!contentArea.contains(event.target) ||
+            event.target === contentArea ||
+            event.target.tagName === 'H1' ||
+            (contentArea.contains(event.target) && !event.target.classList.contains('translatable-word') && !event.target.closest('.translatable-word')) // Clicked inside content but not on a word
+           )
+        {
+             // Also ensure click isn't on the popup itself (though pointer-events:none helps)
+             if(event.target.id !== 'translation-popup') {
+                removeHighlights();
+             }
         }
-    }, true); // Use capture phase to catch early
+    }, true); // Use capture phase
 
 
     // --- Initialization ---
@@ -571,14 +606,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize Telegram Web App SDK
     try {
         if (window.Telegram && window.Telegram.WebApp) {
-            window.Telegram.WebApp.ready(); // Inform Telegram app is ready
-            window.Telegram.WebApp.expand(); // Request app to expand to full height
-            // Optional: Disable swipe down to close, might interfere with scrolling
-            // window.Telegram.WebApp.disableVerticalSwipes();
+            window.Telegram.WebApp.ready();
+            window.Telegram.WebApp.expand();
             console.log("Telegram Web App SDK initialized.");
-             // Optional: Apply theme colors dynamically if needed later
-             // document.body.style.backgroundColor = window.Telegram.WebApp.themeParams.bg_color || '#ffffff';
-             // document.body.style.color = window.Telegram.WebApp.themeParams.text_color || '#000000';
         } else {
             console.log("Telegram Web App script not loaded or not in Telegram environment.");
         }
